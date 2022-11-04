@@ -338,7 +338,7 @@ namespace benchIO {
 
   void errorOut(const char* s) {
     cerr << s << endl;
-    throw s;
+    // throw s;
   }
   void packInt64(int64_t x, uint8_t buf[8]) {
     uint64_t xu = x;
