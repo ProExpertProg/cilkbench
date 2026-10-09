@@ -25,8 +25,8 @@ def shellGetOutput(cmd) :
   return output.decode("utf-8")
 
 def stripFloat(val) :
-  trunc = float(int(val*1000))/1000
-  return str(trunc).rstrip('0')    
+  # 6 significant digits; scientific notation for very small/large values.
+  return "%.6g" % val
 
 def runSingle(runProgram, options, ifile, procs) :
   comString = "./"+runProgram+" "+options+" "+ifile
