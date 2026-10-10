@@ -19,6 +19,8 @@ CHECK_CILKSAN=0
 CHECK_CILKSCALE=0
 NUMTRIALS=$DEFAULT_NUMTRIALS
 WORKERS_TO_TEST=$DEFAULT_WORKERS_TO_TEST
+# Empty means a single iteration that leaves CILK_GRAINSIZE untouched.
+GRAINSIZES_TO_TEST=""
 COMPILERS_TO_TEST=""
 
 function usage {
@@ -36,6 +38,7 @@ function usage {
     >&2 echo -e "\t-s|--serial : Compile serial elision using default Clang pipeline."
     >&2 echo -e "\t-x=<int>|--trials=<int> : Specify the number of trials to run."
     >&2 echo -e "\t-w=<int,int,...>|--workers=<int,int,...> : Specify how many workers to use."
+    >&2 echo -e "\t-gs=<int,int,...>|--grainsizes=<int,int,...> : Runtime CILK_GRAINSIZE values (only PBBS). Does not affect compiler-stripmined loops."
     >&2 echo -e "\t-checkrace : Compile with Cilksan race detection."
     >&2 echo -e "\t-checkscale : Compile with Cilkscale scalability analysis."
     >&2 echo -e "$0 -h|--help"
@@ -110,6 +113,10 @@ do
 	    ;;
 	-x=*|--trials=*)
 	    NUMTRIALS="${key#*=}"
+	    shift
+	    ;;
+	-gs=*|--grainsizes=*)
+	    GRAINSIZES_TO_TEST="$(echo ${key#*=} | sed 's/,/ /g')"
 	    shift
 	    ;;
 	-w=*|--workers=*)

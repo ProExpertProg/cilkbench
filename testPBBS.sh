@@ -80,20 +80,28 @@ for Test in $ALLTESTS; do
 	# 	make
 	#     fi
 	# fi
-	for P in $WORKERS; do
-	    if [[ $CHECK_CORRECTNESS -ne 0 ]]; then
-		echo "CILK_NWORKERS=$P ./testInputs -r $NUMTRIALS -p $P"
-		CILK_NWORKERS=$P ./testInputs -r $NUMTRIALS -p $P
-	    fi
-	    # echo "CILK_NWORKERS=$P taskset -c 0-$(($P-1)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P"
-	    # CILK_NWORKERS=$P taskset -c 0-$(($P-1)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P
+	for G in ${GRAINSIZES_TO_TEST:-default}; do
+    if [[ $G == "default" ]]; then
+		  echo "CILK_GRAINSIZE=${CILK_GRAINSIZE:-default}"
+    else
+      echo "CILK_GRAINSIZE=$G"
+      export CILK_GRAINSIZE=$G
+    fi
+		for P in $WORKERS; do
+		    if [[ $CHECK_CORRECTNESS -ne 0 ]]; then
+			echo "CILK_NWORKERS=$P ./testInputs -r $NUMTRIALS -p $P"
+			CILK_NWORKERS=$P ./testInputs -r $NUMTRIALS -p $P
+		    fi
+		    # echo "CILK_NWORKERS=$P taskset -c 0-$(($P-1)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P"
+		    # CILK_NWORKERS=$P taskset -c 0-$(($P-1)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P
 
-	    # echo "CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 ./testInputs -x -r $NUMTRIALS -p $P"
-	    # CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 ./testInputs -x -r $NUMTRIALS -p $P
-	    (RUN_ON_P_WORKERS $P "./testInputs -x -r $NUMTRIALS -p $P")
-	    # echo "CILK_NWORKERS=$P taskset -c 8-$(($P+7)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P"
-	    # CILK_NWORKERS=$P taskset -c 8-$(($P+7)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P
+		    # echo "CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 ./testInputs -x -r $NUMTRIALS -p $P"
+		    # CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 ./testInputs -x -r $NUMTRIALS -p $P
+		    (RUN_ON_P_WORKERS $P "./testInputs -x -r $NUMTRIALS -p $P")
+		    # echo "CILK_NWORKERS=$P taskset -c 8-$(($P+7)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P"
+		    # CILK_NWORKERS=$P taskset -c 8-$(($P+7)) numactl -i all ./testInputs -x -r $NUMTRIALS -p $P
 	    
+		done
 	done
 	unset TAPIR_PCC
 	echo "popd"
