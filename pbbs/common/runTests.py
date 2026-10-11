@@ -19,9 +19,15 @@ def shellGetOutput(cmd) :
   process = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
   output, err = process.communicate()
-  
+
+  # Judge success by exit status, not by stderr: compilers routinely print
+  # warnings (e.g. while building a data generator for the first time) and
+  # those must not abort a test. Forward stderr so it still reaches the log.
+  if (process.returncode != 0):
+      raise NameError(cmd+"\n"+output.decode("utf-8")+err.decode("utf-8")
+                      +"\n(exit status "+str(process.returncode)+")")
   if (len(err) > 0):
-      raise NameError(cmd+"\n"+output.decode("utf-8")+err.decode("utf-8"))
+      sys.stderr.write(err.decode("utf-8"))
   return output.decode("utf-8")
 
 def stripFloat(val) :
