@@ -101,6 +101,16 @@ RUN_ON_P_WORKERS() {
     P=$1
     # echo "CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 $2"
     # CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 $2
-    echo "CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P ionice -c 2 -n 0 $2"
-    CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P ionice -c 2 -n 0 $2
+    # Pin to cores P..2P-1 if the machine has that many online cores, otherwise to cores 0..P-1. On a machine with
+    # 2 NUMA nodes of 24 cores, P = 24 then runs exactly on the second node and P = 48 on all cores.
+    NCPUS=$(getconf _NPROCESSORS_ONLN)
+    if [ $((2 * P)) -le "$NCPUS" ]; then
+        FIRST_CORE=$P
+        LAST_CORE=$((2 * P - 1))
+    else
+        FIRST_CORE=0
+        LAST_CORE=$((P - 1))
+    fi
+    echo "CILK_NWORKERS=$P setarch x86_64 -R taskset -c $FIRST_CORE-$LAST_CORE ionice -c 2 -n 0 $2"
+    CILK_NWORKERS=$P setarch x86_64 -R taskset -c $FIRST_CORE-$LAST_CORE ionice -c 2 -n 0 $2
 }
