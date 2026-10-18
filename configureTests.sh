@@ -101,12 +101,12 @@ RUN_ON_P_WORKERS() {
     P=$1
     # echo "CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 $2"
     # CILK_NWORKERS=$P setarch x86_64 -R taskset -c 1-$P numactl -i all ionice -c 2 -n 0 $2
-    # Pin to cores P..2P-1 if the machine has that many online cores, otherwise to cores 0..P-1. On a machine with
-    # 2 NUMA nodes of 24 cores, P = 24 then runs exactly on the second node and P = 48 on all cores.
+    # With N online cores on 2 NUMA nodes, pin to cores N/2..N/2+P-1, i.e. the second node, if P workers fit on it.
+    # Otherwise start on the first node: cores 0..P-1 (all cores for P = N).
     NCPUS=$(getconf _NPROCESSORS_ONLN)
-    if [ $((2 * P)) -le "$NCPUS" ]; then
-        FIRST_CORE=$P
-        LAST_CORE=$((2 * P - 1))
+    if [ "$P" -le $((NCPUS / 2)) ]; then
+        FIRST_CORE=$((NCPUS / 2))
+        LAST_CORE=$((NCPUS / 2 + P - 1))
     else
         FIRST_CORE=0
         LAST_CORE=$((P - 1))
